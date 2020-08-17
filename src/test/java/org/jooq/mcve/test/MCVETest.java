@@ -37,6 +37,7 @@
  */
 package org.jooq.mcve.test;
 
+import static org.jooq.impl.DSL.arrayAgg;
 import static org.jooq.mcve.Tables.TEST;
 import static org.junit.Assert.assertEquals;
 
@@ -44,9 +45,10 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 
 import org.jooq.DSLContext;
+import org.jooq.Record2;
+import org.jooq.Result;
 import org.jooq.impl.DSL;
 import org.jooq.mcve.tables.records.TestRecord;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -71,14 +73,27 @@ public class MCVETest {
 
     @Test
     public void mcveTest() {
-        TestRecord result =
-        ctx.insertInto(TEST)
-           .columns(TEST.VALUE)
-           .values(42)
-           .returning(TEST.ID)
-           .fetchOne();
+        ctx.deleteFrom(TEST)
+            .execute();
 
-        result.refresh();
-        assertEquals(42, (int) result.getValue());
+        ctx.insertInto(TEST)
+           .columns(TEST.GROUP_VALUE, TEST.WRAPPED_VALUE)
+           .values(42, new SomeUuidWrapper())
+           .values(56, new SomeUuidWrapper())
+           .values(42, new SomeUuidWrapper())
+           .execute();
+
+        // Verify a regular SELECT comes back as expected
+        Result<TestRecord> allResults = ctx.selectFrom(TEST).fetch();
+        assertEquals(3, allResults.size());
+
+        Result<Record2<Integer, SomeUuidWrapper[]>> aggResult =
+        ctx.select(TEST.GROUP_VALUE, arrayAgg(TEST.WRAPPED_VALUE))
+            .from(TEST)
+            .groupBy(TEST.GROUP_VALUE)
+            .fetch();
+
+        // Sadly, we will never reach here
+        assertEquals(2, aggResult.size());
     }
 }

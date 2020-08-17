@@ -113,6 +113,13 @@
                                             <inputSchema>MCVE</inputSchema>
                                         </schema>
                                     </schemata>
+                                    <forcedTypes>
+                                        <forcedType>
+                                            <userType>org.jooq.mcve.test.SomeUuidWrapper</userType>
+                                            <converter>org.jooq.mcve.test.SomeUuidWrapperConverter</converter>
+                                            <includeExpression>test\.wrapped_value</includeExpression>
+                                        </forcedType>
+                                    </forcedTypes>
                                 </database>
                                 <generate>
                                     <generatedAnnotation>false</generatedAnnotation>
